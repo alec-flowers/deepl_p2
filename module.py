@@ -4,6 +4,7 @@ import torch
 class Module(object):
     def __init__(self):
         pass
+
     def forward(self, * input):
         raise NotImplementedError
 
@@ -15,6 +16,15 @@ class Module(object):
 
 
 class Linear(Module):
+    """
+    Fully connected linear layer
+    Constructor parameters: dimensions of input and output
+
+    Returns:
+    forward  :  FloatTensor of size m (m: input_dim)
+    backward :  FloatTensor of size n (n: output_dim)
+    """
+
     def __init__(self, input_dim, output_dim, mean=0, std=1):
         super().__init__()
         self.input_dim = input_dim
@@ -25,13 +35,22 @@ class Linear(Module):
         self.grad_b = torch.empty(self.b.size())
         self.x = torch.empty((input_dim, 1))
 
-    def forward(self, x):
-        self.x = x
-        return torch.mm(self.w, x) + self.b
+    def forward(self, inp):
+        # xᴸ⁻¹
+        self.x = inp
+        # sᴸ = wᴸ xᴸ⁻¹ + bᴸ
+        return torch.mm(self.w, self.x) + self.b
 
     def backward(self, gradwrtoutput):
+        # Populating the values ∂l/∂w and ∂l/∂b of current layer
+
+        # ∂l/∂wᵢⱼᴸ⁻¹ = ∑ ∂l/∂sᵢᴸ . xⱼᴸ⁻¹
         self.grad_w = torch.mm(self.x, gradwrtoutput.T)
+
+        # ∂l/∂bᵢᴸ⁻¹ = ∑ ∂l/∂sᵢᴸ
         self.grad_b = gradwrtoutput
+
+        # return ∂L/∂xⱼᴸ⁻¹ = wᵢⱼ . ∂L/∂sⱼᴸ
         return torch.mm(self.w.T, gradwrtoutput)
 
     def get_param(self):
@@ -44,38 +63,65 @@ class Linear(Module):
 
 
 class Relu(Module):
+    """
+    ReLU activation module
+
+    Returns:
+    forward  :  FloatTensor of size m (m: number of units)
+    backward :  FloatTensor of size m (m: number of units)
+    """
     def __init__(self):
         super().__init__()
-        self.x = None
+        self.s = None
 
-    def forward(self, x):
-        self.x = x
-        return torch.clamp(x, min=0)
+    def forward(self, inp):
+        self.s = inp
+        # xᴸ = σ(sᴸ)
+        return torch.clamp(self.s, min=0)
 
     def backward(self, gradwrtoutput):
-        return torch.torch.clamp(self.x, min=0, max=1).ceil() * gradwrtoutput
+        # return ∂l/∂sᵢᴸ = ∂l/∂xᵢᴸ * σ'(sᵢᴸ)
+        return torch.torch.clamp(self.s, min=0, max=1).ceil() * gradwrtoutput
 
     def get_param(self):
         return [[None, None]]
 
 
 class Tanh(Module):
+    """
+    Tanh activation module
+
+    Returns:
+    forward  :  FloatTensor of size m (m: number of units)
+    backward :  FloatTensor of size m (m: number of units)
+    """
     def __init__(self):
         super().__init__()
-        self.x = None
+        self.s = None
 
-    def forward(self, x):
-        self.x = x
-        exp = torch.exp(2*self.x)
+    def forward(self, s):
+        self.s = s
+        # xᴸ = σ(sᴸ)
+        exp = torch.exp(2*self.s)
+        # tanh(x) = ((-1. + e⁻²ˣ)/(1. + e⁻²ˣ)).
         return (exp-1)/(exp+1)
 
     def backward(self, gradwrtoutput):
-        return 2/(torch.exp(self.x)+torch.exp(-self.x)) * gradwrtoutput
+        # return ∂l/∂sᵢᴸ = ∂l/∂xᵢᴸ * σ'(sᵢᴸ)
+        return 2/(torch.exp(self.s)+torch.exp(-self.s)) * gradwrtoutput
 
     def get_param(self):
         return [[None, None]]
 
+
 class MSEloss(Module):
+    """
+    Mean Squared loss module
+
+    Returns:
+    forward  :  MSELoss: l = (x - _x_)²/n (Tensor of size of 1)
+    backward :  ∂l/∂xₙᴸ = 2. (x - _x_)/n (Tensor of size of n)
+    """
     def __init__(self):
         super().__init__()
         self.x = None
@@ -94,6 +140,18 @@ class MSEloss(Module):
 
 
 class Sequential(Module):
+    """
+    A module for combining the several modules in a sequential structure
+
+    Returns:
+    forward  :  Apply the sequence of forward of the underlying modules
+    In the forward process in addition to constructing and returning
+    the values of the last layer the node activation values are also stored
+
+    backward :  apply the back-propagation of the layers going through the
+    network in a reverse order and fills the gradient member of the underlying
+    module objects
+    """
 
     def __init__(self):
         super().__init__()
@@ -126,7 +184,8 @@ class Sequential(Module):
                 param_list.append(item)
         return param_list
 
-mod_list = [Linear(10,5), Tanh(), Linear(5,2), Relu()]
+
+mod_list = [Linear(10, 5), Tanh(), Linear(5, 2), Relu()]
 seq = Sequential(mod_list)
 seq.forward(torch.empty((10, 1)))
 seq.backward(torch.empty((2, 1)))
