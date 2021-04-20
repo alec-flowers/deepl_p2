@@ -54,7 +54,7 @@ class Linear(Module):
         return torch.mm(self.w.T, gradwrtoutput)
 
     def get_param(self):
-        return [[self.w, self.grad_w], [self.b, self.grad_b]]
+        return [(self.w, self.grad_w.T), (self.b, self.grad_b)]
 
 # lin = Linear(5,5)
 # input = torch.Tensor([[1],[2],[3],[4],[5]])
@@ -84,7 +84,7 @@ class Relu(Module):
         return torch.torch.clamp(self.s, min=0, max=1).ceil() * gradwrtoutput
 
     def get_param(self):
-        return [[None, None]]
+        return [(None, None)]
 
 
 class Tanh(Module):
@@ -111,7 +111,7 @@ class Tanh(Module):
         return 2/(torch.exp(self.s)+torch.exp(-self.s)) * gradwrtoutput
 
     def get_param(self):
-        return [[None, None]]
+        return [(None, None)]
 
 
 class MSEloss(Module):
@@ -136,7 +136,7 @@ class MSEloss(Module):
         return 2*(self.x - self.target) / self.x.size(0).item()
 
     def get_param(self):
-        return [[None, None]]
+        return [(None, None)]
 
 
 class Sequential(Module):
@@ -184,8 +184,3 @@ class Sequential(Module):
                 param_list.append(item)
         return param_list
 
-
-mod_list = [Linear(10, 5), Tanh(), Linear(5, 2), Relu()]
-seq = Sequential(mod_list)
-seq.forward(torch.empty((10, 1)))
-seq.backward(torch.empty((2, 1)))
