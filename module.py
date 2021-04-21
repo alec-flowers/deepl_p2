@@ -130,10 +130,10 @@ class MSEloss(Module):
     def forward(self, x, target):
         self.x = x
         self.target = target
-        return sum((self.x - self.target)**2) / self.x.size(0).item()
+        return sum((self.x - self.target)**2) / self.x.size(0)
 
     def backward(self):
-        return 2*(self.x - self.target) / self.x.size(0).item()
+        return 2*(self.x - self.target) / self.x.size(0)
 
     def get_param(self):
         return [(None, None)]

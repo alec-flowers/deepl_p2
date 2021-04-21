@@ -45,7 +45,7 @@ def check_output_target(train_target_one_hot, output_one_hot):
     return int(correct) != int(prediction)
 
 
-def MSEloss(pred, target):
+def mse_loss_(pred, target):
     """
     Calculate MSEloss
 
@@ -55,7 +55,7 @@ def MSEloss(pred, target):
     return (pred - target.float()).pow(2).sum()
 
 
-def dMSEloss(pred, target):
+def d_mse_loss(pred, target):
     """
     Calculate derivative of MSEloss
 
@@ -114,7 +114,7 @@ class BatchStochaticGradientDescent(Solver):
                                 bet.1 & train_size batch-SGD)
     """
 
-    def __init__(self, module, learning_rate, batch_size=1):
+    def __init__(self, module, criterion, learning_rate, batch_size=1):
         """
         Inputs:
         module: a sequential module object
@@ -122,7 +122,7 @@ class BatchStochaticGradientDescent(Solver):
                        gradient of the parameters are applied
         """
         super(BatchStochaticGradientDescent,
-              self).__init__(module, learning_rate)
+              self).__init__(module, criterion, learning_rate)
         self.nb_train_errors = 0
         self.tot_loss = 0
         self.call_count = 0
@@ -147,10 +147,9 @@ class BatchStochaticGradientDescent(Solver):
             output = self.module.forward(train_inps[i])
             if check_output_target(train_targets[i], output):
                 self.nb_train_errors += 1
-            self.tot_loss += criterion.forward(output,
-                                                train_targets[i].float())
-            d_loss_d_output = criterion.backward(output,
-                                                 train_targets[i].float())
+            self.tot_loss += self.criterion.forward(output,
+                                                    train_targets[i].float())
+            d_loss_d_output = self.criterion.backward()
             self.module.backward(d_loss_d_output)
         self.step(self.batch_size)
         self.call_count += 1
@@ -166,9 +165,10 @@ inp = torch.empty((10, 1)).normal_()
 out = torch.empty((2, 1)).normal_()
 seq.forward(inp)
 seq.backward(out)
+loss = MSEloss()
 
 
-gradient_descent = BatchStochaticGradientDescent(seq, 0.02)
+gradient_descent = BatchStochaticGradientDescent(seq, loss, 0.02)
 gradient_descent.gd_reset()
 gradient_descent.step()
 gradient_descent.zero_grad()
