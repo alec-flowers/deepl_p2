@@ -45,16 +45,16 @@ class Linear(Module):
         # Populating the values ∂l/∂w and ∂l/∂b of current layer
 
         # ∂l/∂wᵢⱼᴸ⁻¹ = ∑ ∂l/∂sᵢᴸ . xⱼᴸ⁻¹
-        self.grad_w = torch.mm(self.x, gradwrtoutput.T)
+        self.grad_w.add_(torch.mm(gradwrtoutput, self.x.T))
 
         # ∂l/∂bᵢᴸ⁻¹ = ∑ ∂l/∂sᵢᴸ
-        self.grad_b = gradwrtoutput
+        self.grad_b.add_(gradwrtoutput)
 
         # return ∂L/∂xⱼᴸ⁻¹ = wᵢⱼ . ∂L/∂sⱼᴸ
         return torch.mm(self.w.T, gradwrtoutput)
 
     def get_param(self):
-        return [(self.w, self.grad_w.T), (self.b, self.grad_b)]
+        return [(self.w, self.grad_w), (self.b, self.grad_b)]
 
 # lin = Linear(5,5)
 # input = torch.Tensor([[1],[2],[3],[4],[5]])
@@ -172,7 +172,6 @@ class Sequential(Module):
 
     def backward(self, gradwrtoutput):
         y = gradwrtoutput
-        print(self.modules[::-1])
         for module in self.modules[::-1]:
             y = module.backward(y)
         return y
