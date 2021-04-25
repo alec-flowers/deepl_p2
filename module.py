@@ -90,6 +90,31 @@ class Relu(Module):
         return [(None, None)]
 
 
+class Sigmoid(Module):
+    """
+    Sigmoid activation module
+
+    Returns:
+    forward  :  FloatTensor of size m (m: number of units)
+    backward :  FloatTensor of size m (m: number of units)
+    """
+    def __init__(self):
+        super().__init__()
+        self.sigmoid = None
+
+    def forward(self, inp):
+        # if inp.item >= 0:
+        self.sigmoid = 1. / (1. + torch.exp(-inp))
+        # else:
+        #     self.sigmoid = torch.exp(inp) / (1. + torch.exp(inp))
+        return self.sigmoid
+
+    def backward(self, gradwrtoutput):
+        return self.sigmoid * (1-self.sigmoid) * gradwrtoutput
+
+    def get_param(self):
+        return [(None, None)]
+
 class Tanh(Module):
     """
     Tanh activation module
@@ -134,11 +159,12 @@ class MSEloss(Module):
 
     def forward(self, x, target):
         self.x = x
-        self.target = target
+        self.target = target[:, None]
         return sum((self.x - self.target)**2) / self.x.size(0)
 
     def backward(self):
-        return 2*(self.x - self.target) / self.x.size(0)
+        #a = 2*(self.x - self.target) / self.x.size(0)
+        return torch.sum(2*(self.x - self.target) / self.x.size(0))
 
     def get_param(self):
         return [(None, None)]

@@ -11,11 +11,11 @@ train_data, train_labels = utils.generate_disc_set(1000)
 test_data, test_labels = utils.generate_disc_set(1000)
 
 
-mod_list = [Linear(2, 25), Tanh(),
-            Linear(25, 50), Tanh(),
-            Linear(50, 25), Tanh(),
-            Linear(25, 25), Tanh(),
-            Linear(25, 2), Relu()]
+mod_list = [Linear(2, 25), Relu(),
+            Linear(25, 50), Relu(),
+            Linear(50, 25), Relu(),
+            Linear(25, 25), Relu(),
+            Linear(25, 2), Sigmoid()]
 
 seq = Sequential(mod_list)
 loss = MSEloss()

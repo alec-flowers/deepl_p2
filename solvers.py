@@ -36,15 +36,15 @@ def check_output_target(train_target_not_one_hot, output_one_hot):
 
     @param      grads of the model weights
     """
-    output_list = [output_one_hot[0], output_one_hot[1]]
-    prediction = output_list.index(max(output_list))
-
-    correct = train_target_not_one_hot
+    # output_list = [output_one_hot[0], output_one_hot[1]]
+    # prediction = output_list.index(max(output_list))
+    #
+    # correct = train_target_not_one_hot
     # train_targets_list = [train_target_one_hot[0], train_target_one_hot[1]]
     # correct = train_targets_list.index(max(train_targets_list))
-
-    return int(correct) != int(prediction)
-
+    #
+    # return int(correct) != int(prediction)
+    return torch.argmax(train_target_not_one_hot) != torch.argmax(output_one_hot)
 
 def mse_loss_(pred, target):
     """
@@ -158,6 +158,7 @@ class BatchStochaticGradientDescent(Solver):
     def gd_reset(self):
         self.zero_grad()
         self.call_count = 0
+        self.tot_loss = 0
 
 
 if __name__ == "__main__":
