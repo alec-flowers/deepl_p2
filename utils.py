@@ -29,5 +29,3 @@ def generate_disc_set(nb, x=.5, y=.5,plot=False):
         ax.add_patch(circle1)
         plt.show()
     return data, labels
-
-data, labels = generate_disc_set(1000, plot=True)

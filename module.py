@@ -39,7 +39,8 @@ class Linear(Module):
         # xᴸ⁻¹
         self.x = inp
         # sᴸ = wᴸ xᴸ⁻¹ + bᴸ
-        return torch.mm(self.w, self.x) + self.b
+        #return torch.mm(self.w, self.x) + self.b
+        return self.w @ self.x + self.b
 
     def backward(self, gradwrtoutput):
         # Populating the values ∂l/∂w and ∂l/∂b of current layer

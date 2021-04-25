@@ -159,20 +159,21 @@ class BatchStochaticGradientDescent(Solver):
         self.call_count = 0
 
 
-mod_list = [Linear(10, 5), Tanh(), Linear(5, 2), Relu()]
-seq = Sequential(mod_list)
-inp = torch.empty((10, 1)).normal_()
-out = torch.empty((2, 1)).normal_()
-seq.forward(inp)
-seq.backward(out)
-loss = MSEloss()
+if __name__ == "__main__":
+    mod_list = [Linear(10, 5), Tanh(), Linear(5, 2), Relu()]
+    seq = Sequential(mod_list)
+    inp = torch.empty((10, 1)).normal_()
+    out = torch.empty((2, 1)).normal_()
+    seq.forward(inp)
+    seq.backward(out)
+    loss = MSEloss()
 
 
-gradient_descent = BatchStochaticGradientDescent(seq, loss, 0.02)
-gradient_descent.gd_reset()
-gradient_descent.step()
-gradient_descent.zero_grad()
-gradient_descent.gd_reset()
-inps = torch.empty((5, 10, 1)).normal_()
-outs = torch.empty((5, 2, 1)).normal_()
-gradient_descent.gd_step(inps, outs)
+    gradient_descent = BatchStochaticGradientDescent(seq, loss, 0.02)
+    gradient_descent.gd_reset()
+    gradient_descent.step()
+    gradient_descent.zero_grad()
+    gradient_descent.gd_reset()
+    inps = torch.empty((5, 10, 1)).normal_()
+    outs = torch.empty((5, 2, 1)).normal_()
+    gradient_descent.gd_step(inps, outs)
