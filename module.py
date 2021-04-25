@@ -39,6 +39,8 @@ class Linear(Module):
         # xᴸ⁻¹
         self.x = inp
         # sᴸ = wᴸ xᴸ⁻¹ + bᴸ
+        if len(list(self.x.size())) == 1:
+            self.x = self.x.view(-1, 1)
         return torch.mm(self.w, self.x) + self.b
 
     def backward(self, gradwrtoutput):
@@ -70,6 +72,7 @@ class Relu(Module):
     forward  :  FloatTensor of size m (m: number of units)
     backward :  FloatTensor of size m (m: number of units)
     """
+
     def __init__(self):
         super().__init__()
         self.s = None
@@ -87,6 +90,31 @@ class Relu(Module):
         return [(None, None)]
 
 
+class Sigmoid(Module):
+    """
+    Sigmoid activation module
+
+    Returns:
+    forward  :  FloatTensor of size m (m: number of units)
+    backward :  FloatTensor of size m (m: number of units)
+    """
+    def __init__(self):
+        super().__init__()
+        self.sigmoid = None
+
+    def forward(self, inp):
+        # if inp.item >= 0:
+        self.sigmoid = 1. / (1. + torch.exp(-inp))
+        # else:
+        #     self.sigmoid = torch.exp(inp) / (1. + torch.exp(inp))
+        return self.sigmoid
+
+    def backward(self, gradwrtoutput):
+        return self.sigmoid * (1-self.sigmoid) * gradwrtoutput
+
+    def get_param(self):
+        return [(None, None)]
+
 class Tanh(Module):
     """
     Tanh activation module
@@ -95,6 +123,7 @@ class Tanh(Module):
     forward  :  FloatTensor of size m (m: number of units)
     backward :  FloatTensor of size m (m: number of units)
     """
+
     def __init__(self):
         super().__init__()
         self.s = None
@@ -122,6 +151,7 @@ class MSEloss(Module):
     forward  :  MSELoss: l = (x - _x_)²/n (Tensor of size of 1)
     backward :  ∂l/∂xₙᴸ = 2. (x - _x_)/n (Tensor of size of n)
     """
+
     def __init__(self):
         super().__init__()
         self.x = None
@@ -129,11 +159,12 @@ class MSEloss(Module):
 
     def forward(self, x, target):
         self.x = x
-        self.target = target
+        self.target = target[:, None]
         return sum((self.x - self.target)**2) / self.x.size(0)
 
     def backward(self):
-        return 2*(self.x - self.target) / self.x.size(0)
+        #a = 2*(self.x - self.target) / self.x.size(0)
+        return torch.sum(2*(self.x - self.target) / self.x.size(0))
 
     def get_param(self):
         return [(None, None)]
@@ -182,4 +213,3 @@ class Sequential(Module):
             for item in module.get_param():
                 param_list.append(item)
         return param_list
-

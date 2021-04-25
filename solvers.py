@@ -30,20 +30,21 @@ def make_grad_zero_worker(grad):
         grad.zero_()
 
 
-def check_output_target(train_target_one_hot, output_one_hot):
+def check_output_target(train_target_not_one_hot, output_one_hot):
     """
     @brief      checks the on-hot predictions and targets
 
     @param      grads of the model weights
     """
-    output_list = [output_one_hot[0], output_one_hot[1]]
-    prediction = output_list.index(max(output_list))
-
-    train_targets_list = [train_target_one_hot[0], train_target_one_hot[1]]
-    correct = train_targets_list.index(max(train_targets_list))
-
-    return int(correct) != int(prediction)
-
+    # output_list = [output_one_hot[0], output_one_hot[1]]
+    # prediction = output_list.index(max(output_list))
+    #
+    # correct = train_target_not_one_hot
+    # train_targets_list = [train_target_one_hot[0], train_target_one_hot[1]]
+    # correct = train_targets_list.index(max(train_targets_list))
+    #
+    # return int(correct) != int(prediction)
+    return torch.argmax(train_target_not_one_hot) != torch.argmax(output_one_hot)
 
 def mse_loss_(pred, target):
     """
@@ -139,10 +140,10 @@ class BatchStochaticGradientDescent(Solver):
             gradient_descent_worker(weight, grad, self.lr, batch_size)
 
     def gd_step(self, train_inps, train_targets):
-        self.nb_train_errors = 0
+        # self.nb_train_errors = 0
         self.tot_d_loss = torch.empty((train_targets.size(0)))
         start = self.call_count * self.batch_size
-        stop = max(self.call_count * self.batch_size, train_inps.size(0))
+        stop = min((self.call_count+1) * self.batch_size, train_inps.size(0))
         for i in range(start, stop, 1):
             output = self.module.forward(train_inps[i])
             if check_output_target(train_targets[i], output):
@@ -157,22 +158,24 @@ class BatchStochaticGradientDescent(Solver):
     def gd_reset(self):
         self.zero_grad()
         self.call_count = 0
+        self.tot_loss = 0
 
 
-mod_list = [Linear(10, 5), Tanh(), Linear(5, 2), Relu()]
-seq = Sequential(mod_list)
-inp = torch.empty((10, 1)).normal_()
-out = torch.empty((2, 1)).normal_()
-seq.forward(inp)
-seq.backward(out)
-loss = MSEloss()
+if __name__ == "__main__":
+    mod_list = [Linear(10, 5), Tanh(), Linear(5, 2), Relu()]
+    seq = Sequential(mod_list)
+    inp = torch.empty((10, 1)).normal_()
+    out = torch.empty((2, 1)).normal_()
+    seq.forward(inp)
+    seq.backward(out)
+    loss = MSEloss()
 
 
-gradient_descent = BatchStochaticGradientDescent(seq, loss, 0.02)
-gradient_descent.gd_reset()
-gradient_descent.step()
-gradient_descent.zero_grad()
-gradient_descent.gd_reset()
-inps = torch.empty((5, 10, 1)).normal_()
-outs = torch.empty((5, 2, 1)).normal_()
-gradient_descent.gd_step(inps, outs)
+    gradient_descent = BatchStochaticGradientDescent(seq, loss, 0.02)
+    gradient_descent.gd_reset()
+    gradient_descent.step()
+    gradient_descent.zero_grad()
+    gradient_descent.gd_reset()
+    inps = torch.empty((5, 10, 1)).normal_()
+    outs = torch.empty((5, 2, 1)).normal_()
+    gradient_descent.gd_step(inps, outs)
