@@ -1,3 +1,4 @@
+import math
 import torch
 
 
@@ -80,11 +81,11 @@ class Relu(Module):
     def forward(self, inp):
         self.s = inp
         # xᴸ = σ(sᴸ)
-        return torch.clamp(self.s, min=0)
+        return self.s.clamp(min=0)
 
     def backward(self, gradwrtoutput):
         # return ∂l/∂sᵢᴸ = ∂l/∂xᵢᴸ * σ'(sᵢᴸ)
-        return torch.torch.clamp(self.s, min=0, max=1).ceil() * gradwrtoutput
+        return self.s.sign().clamp(min=0) * gradwrtoutput
 
     def get_param(self):
         return [(None, None)]
@@ -132,12 +133,14 @@ class Tanh(Module):
         self.s = s
         # xᴸ = σ(sᴸ)
         exp = torch.exp(2*self.s)
-        # tanh(x) = ((-1. + e⁻²ˣ)/(1. + e⁻²ˣ)).
-        return (exp-1)/(exp+1)
+        # tanh(x) = ((-1. - e⁻²ˣ)/(1. + e⁻²ˣ)).
+        return (1. - (2. / (1. + exp)))
 
     def backward(self, gradwrtoutput):
         # return ∂l/∂sᵢᴸ = ∂l/∂xᵢᴸ * σ'(sᵢᴸ)
-        return 2/(torch.exp(self.s)+torch.exp(-self.s)) * gradwrtoutput
+        # return 2/(torch.exp(self.s)+torch.exp(-self.s)) * gradwrtoutput
+        return (4 * ((self.s.exp() + self.s.mul(-1).exp()).pow(-2)) *
+                gradwrtoutput)
 
     def get_param(self):
         return [(None, None)]
@@ -154,17 +157,16 @@ class MSEloss(Module):
 
     def __init__(self):
         super().__init__()
-        self.x = None
+        self.pred = None
         self.target = None
 
-    def forward(self, x, target):
-        self.x = x
-        self.target = target[:, None]
-        return sum((self.x - self.target)**2) / self.x.size(0)
+    def forward(self, pred, target):
+        self.pred = pred
+        self.target = target.float().view_as(pred)
+        return sum((self.pred - self.target)**2) / self.pred.size(0)
 
     def backward(self):
-        #a = 2*(self.x - self.target) / self.x.size(0)
-        return torch.sum(2*(self.x - self.target) / self.x.size(0))
+        return 2*(self.pred - self.target) / self.pred.size(0)
 
     def get_param(self):
         return [(None, None)]
