@@ -140,7 +140,7 @@ class BatchStochaticGradientDescent(Solver):
             gradient_descent_worker(weight, grad, self.lr, batch_size)
 
     def gd_step(self, train_inps, train_targets):
-        self.nb_train_errors = 0
+        # self.nb_train_errors = 0
         self.tot_d_loss = torch.empty((train_targets.size(0)))
         start = self.call_count * self.batch_size
         stop = min((self.call_count+1) * self.batch_size, train_inps.size(0))
