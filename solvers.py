@@ -7,6 +7,18 @@ import torch
 from module import *
 
 
+def convert_to_one_hot_labels(input, target):
+    """
+    Convertes targets to one-hot labels of -1 and 1
+
+    Output:
+    one_hot_labels : nx2 dimension FloatTensor
+    """
+    one_hot_ret = input.new(target.size(0), target.max() + 1).fill_(-1)
+    one_hot_ret.scatter_(1, target.view(-1, 1), 1.0)
+    return one_hot_ret
+
+
 def gradient_descent_worker(weight, grad, learning_rate, batch_size):
     """
     @brief      worker for gradient descent step
@@ -30,7 +42,7 @@ def make_grad_zero_worker(grad):
         grad.zero_()
 
 
-def check_output_target(train_target_not_one_hot, output_one_hot):
+def check_pred_target(train_target_one_hot, output_one_hot):
     """
     @brief      checks the on-hot predictions and targets
 
@@ -38,13 +50,14 @@ def check_output_target(train_target_not_one_hot, output_one_hot):
     """
     # output_list = [output_one_hot[0], output_one_hot[1]]
     # prediction = output_list.index(max(output_list))
-    #
-    # correct = train_target_not_one_hot
-    # train_targets_list = [train_target_one_hot[0], train_target_one_hot[1]]
+
+    # # correct = train_target_not_one_hot
+    # train_targets_list = list(train_target_one_hot)
     # correct = train_targets_list.index(max(train_targets_list))
     #
     # return int(correct) != int(prediction)
-    return torch.argmax(train_target_not_one_hot) != torch.argmax(output_one_hot)
+    return torch.argmax(train_target_one_hot) != torch.argmax(output_one_hot)
+
 
 def mse_loss_(pred, target):
     """
@@ -53,17 +66,17 @@ def mse_loss_(pred, target):
     Outputs:
     loss :  float
     """
-    return (pred - target.float()).pow(2).sum()
+    return (pred - target.float().view_as(pred)).pow(2).sum()
 
 
-def d_mse_loss(pred, target):
+def d_mse_loss_(pred, target):
     """
     Calculate derivative of MSEloss
 
     Outputs:
     derivative :  FloatTensor with same dimension as input
     """
-    return 2*(pred - target.float())
+    return 2*(pred - target.float().view_as(pred))
 
 
 class Solver(object):
@@ -124,8 +137,10 @@ class BatchStochaticGradientDescent(Solver):
         """
         super(BatchStochaticGradientDescent,
               self).__init__(module, criterion, learning_rate)
-        self.nb_train_errors = 0
-        self.tot_loss = 0
+        self.nb_train_errors = []
+        self.tot_loss = []
+        self.nb_train_errors_epoch = 0
+        self.tot_loss_epoch = 0.
         self.call_count = 0
         self.batch_size = batch_size
 
@@ -140,25 +155,29 @@ class BatchStochaticGradientDescent(Solver):
             gradient_descent_worker(weight, grad, self.lr, batch_size)
 
     def gd_step(self, train_inps, train_targets):
-        # self.nb_train_errors = 0
-        self.tot_d_loss = torch.empty((train_targets.size(0)))
         start = self.call_count * self.batch_size
         stop = min((self.call_count+1) * self.batch_size, train_inps.size(0))
         for i in range(start, stop, 1):
             output = self.module.forward(train_inps[i])
-            if check_output_target(train_targets[i], output):
-                self.nb_train_errors += 1
-            self.tot_loss += self.criterion.forward(output,
-                                                    train_targets[i].float())
-            d_loss_d_output = self.criterion.backward()
-            self.module.backward(d_loss_d_output)
-        self.step(self.batch_size)
+            if check_pred_target(train_targets[i], output):
+                self.nb_train_errors_epoch += 1
+            loss = mse_loss_(output, train_targets[i])
+            self.tot_loss_epoch += loss.float()
+            d_loss_d_output = d_mse_loss_(output, train_targets[i])
+            d_loss_d_input = self.module.backward(d_loss_d_output)
+        self.step(stop - start)
         self.call_count += 1
+
 
     def gd_reset(self):
         self.zero_grad()
+
+    def gd_epoch_reset(self):
         self.call_count = 0
-        self.tot_loss = 0
+        self.nb_train_errors.append(self.nb_train_errors_epoch)
+        self.nb_train_errors_epoch = 0
+        self.tot_loss.append(self.tot_loss_epoch)
+        self.tot_loss_epoch = 0.
 
 
 if __name__ == "__main__":
@@ -169,7 +188,6 @@ if __name__ == "__main__":
     seq.forward(inp)
     seq.backward(out)
     loss = MSEloss()
-
 
     gradient_descent = BatchStochaticGradientDescent(seq, loss, 0.02)
     gradient_descent.gd_reset()
