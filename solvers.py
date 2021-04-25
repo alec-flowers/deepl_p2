@@ -30,7 +30,7 @@ def make_grad_zero_worker(grad):
         grad.zero_()
 
 
-def check_output_target(train_target_one_hot, output_one_hot):
+def check_output_target(train_target_not_one_hot, output_one_hot):
     """
     @brief      checks the on-hot predictions and targets
 
@@ -39,8 +39,9 @@ def check_output_target(train_target_one_hot, output_one_hot):
     output_list = [output_one_hot[0], output_one_hot[1]]
     prediction = output_list.index(max(output_list))
 
-    train_targets_list = [train_target_one_hot[0], train_target_one_hot[1]]
-    correct = train_targets_list.index(max(train_targets_list))
+    correct = train_target_not_one_hot
+    # train_targets_list = [train_target_one_hot[0], train_target_one_hot[1]]
+    # correct = train_targets_list.index(max(train_targets_list))
 
     return int(correct) != int(prediction)
 
@@ -142,7 +143,7 @@ class BatchStochaticGradientDescent(Solver):
         self.nb_train_errors = 0
         self.tot_d_loss = torch.empty((train_targets.size(0)))
         start = self.call_count * self.batch_size
-        stop = max(self.call_count * self.batch_size, train_inps.size(0))
+        stop = min((self.call_count+1) * self.batch_size, train_inps.size(0))
         for i in range(start, stop, 1):
             output = self.module.forward(train_inps[i])
             if check_output_target(train_targets[i], output):

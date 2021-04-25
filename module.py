@@ -39,8 +39,9 @@ class Linear(Module):
         # xᴸ⁻¹
         self.x = inp
         # sᴸ = wᴸ xᴸ⁻¹ + bᴸ
-        #return torch.mm(self.w, self.x) + self.b
-        return self.w @ self.x + self.b
+        if len(list(self.x.size())) == 1:
+            self.x = self.x.view(-1, 1)
+        return torch.mm(self.w, self.x) + self.b
 
     def backward(self, gradwrtoutput):
         # Populating the values ∂l/∂w and ∂l/∂b of current layer
@@ -71,6 +72,7 @@ class Relu(Module):
     forward  :  FloatTensor of size m (m: number of units)
     backward :  FloatTensor of size m (m: number of units)
     """
+
     def __init__(self):
         super().__init__()
         self.s = None
@@ -96,6 +98,7 @@ class Tanh(Module):
     forward  :  FloatTensor of size m (m: number of units)
     backward :  FloatTensor of size m (m: number of units)
     """
+
     def __init__(self):
         super().__init__()
         self.s = None
@@ -123,6 +126,7 @@ class MSEloss(Module):
     forward  :  MSELoss: l = (x - _x_)²/n (Tensor of size of 1)
     backward :  ∂l/∂xₙᴸ = 2. (x - _x_)/n (Tensor of size of n)
     """
+
     def __init__(self):
         super().__init__()
         self.x = None
@@ -183,4 +187,3 @@ class Sequential(Module):
             for item in module.get_param():
                 param_list.append(item)
         return param_list
-
