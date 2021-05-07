@@ -1,6 +1,11 @@
 import math
 import torch
 
+#debugging stuff
+old_repr = torch.Tensor.__repr__
+def tensor_info(tensor):
+    return repr(tensor.shape)[6:] + ' ' + repr(tensor.dtype)[6:] + '@' + str(tensor.device) + '\n' + old_repr(tensor)
+torch.Tensor.__repr__ = tensor_info
 
 class Module(object):
     def __init__(self):
@@ -30,31 +35,32 @@ class Linear(Module):
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.w = torch.empty((output_dim, input_dim)).normal_(mean, std)
-        self.b = torch.empty((output_dim, 1)).normal_(mean, std)
+        self.w = torch.empty((self.output_dim, self.input_dim)).normal_(mean, std)
+        self.b = torch.empty(self.output_dim).normal_(mean, std)
         self.grad_w = torch.empty(self.w.size())
         self.grad_b = torch.empty(self.b.size())
-        self.x = torch.empty((input_dim, 1))
+        self.x = None
 
     def forward(self, inp):
         # xᴸ⁻¹
         self.x = inp
         # sᴸ = wᴸ xᴸ⁻¹ + bᴸ
-        if len(list(self.x.size())) == 1:
-            self.x = self.x.view(-1, 1)
-        return torch.mm(self.w, self.x) + self.b
+        # if len(list(self.x.size())) == 1:
+        #     self.x = self.x.view(-1, 1)
+        return torch.addmm(self.b, self.x, self.w.T)
 
     def backward(self, gradwrtoutput):
         # Populating the values ∂l/∂w and ∂l/∂b of current layer
 
         # ∂l/∂wᵢⱼᴸ⁻¹ = ∑ ∂l/∂sᵢᴸ . xⱼᴸ⁻¹
-        self.grad_w.add_(torch.mm(gradwrtoutput, self.x.T))
+        self.grad_w.add_(torch.mm(gradwrtoutput.T, self.x))
 
         # ∂l/∂bᵢᴸ⁻¹ = ∑ ∂l/∂sᵢᴸ
-        self.grad_b.add_(gradwrtoutput)
+        #TODO unsure about this
+        self.grad_b.add_(torch.sum(gradwrtoutput, dim=0))
 
         # return ∂L/∂xⱼᴸ⁻¹ = wᵢⱼ . ∂L/∂sⱼᴸ
-        return torch.mm(self.w.T, gradwrtoutput)
+        return torch.mm(gradwrtoutput, self.w)
 
     def get_param(self):
         return [(self.w, self.grad_w), (self.b, self.grad_b)]
@@ -146,6 +152,32 @@ class Tanh(Module):
         return [(None, None)]
 
 
+class Softmax(Module):
+    """
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.s = None
+
+    def forward(self, inp):
+        # Numerical stability, subtract max before applying softmax
+        shift = inp - torch.max(inp, 1)[0].view(-1, 1)
+        self.s = torch.exp(shift)
+        return self.s / torch.sum(self.s, 1, keepdim=True)
+
+    def backward(self, gradwrtoutput):
+        # p = (self.s/torch.sum(self.s)).view(1, -1)
+        # gradwrtoutput = gradwrtoutput.view(1, -1)
+        # jacobian = p * torch.eye(p.size(0)) - torch.mm(p.T, p)
+        # grad = gradwrtoutput @ jacobian
+        return self.s - gradwrtoutput
+
+    def get_param(self):
+        return [(None, None)]
+
+
 class MSEloss(Module):
     """
     Mean Squared loss module
@@ -163,10 +195,39 @@ class MSEloss(Module):
     def forward(self, pred, target):
         self.pred = pred
         self.target = target.float().view_as(pred)
-        return sum((self.pred - self.target)**2) / self.pred.size(0)
+        return torch.sum((self.pred - self.target)**2) / self.pred.size(0)
 
     def backward(self):
         return 2*(self.pred - self.target) / self.pred.size(0)
+
+    def get_param(self):
+        return [(None, None)]
+
+
+class NLLLoss(Module):
+    """
+    Negative Log Liklihood Loss
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.pred = None
+        self.target = None
+
+    def forward(self, pred, target):
+        self.pred = pred
+        self.target = target.float().view_as(pred)
+        # a= self.pred * self.target
+        # b= torch.sum(self.pred * self.target, dim=1)
+        # c = -torch.log(torch.sum(self.pred * self.target, dim=1))
+        # d = torch.sum(-torch.log(torch.sum(self.pred * self.target, dim=1)))
+        return -torch.sum(torch.log(torch.sum(self.pred * self.target, dim=1)))
+
+    def backward(self):
+        epsilon = 1e-6
+        #-(1/self.target.size(0)) * (self.target / (self.pred + epsilon))
+        return self.target
 
     def get_param(self):
         return [(None, None)]
