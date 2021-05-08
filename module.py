@@ -172,6 +172,7 @@ class Softmax(Module):
         # gradwrtoutput = gradwrtoutput.view(1, -1)
         # jacobian = p * torch.eye(p.size(0)) - torch.mm(p.T, p)
         # grad = gradwrtoutput @ jacobian
+        #TODO only works with NLLLoss
         return self.s - gradwrtoutput
 
     def get_param(self):
@@ -216,17 +217,16 @@ class NLLLoss(Module):
         self.target = None
 
     def forward(self, pred, target):
+        epsilon = 1e-5
         self.pred = pred
         self.target = target.float().view_as(pred)
-        # a= self.pred * self.target
-        # b= torch.sum(self.pred * self.target, dim=1)
-        # c = -torch.log(torch.sum(self.pred * self.target, dim=1))
-        # d = torch.sum(-torch.log(torch.sum(self.pred * self.target, dim=1)))
-        return -torch.sum(torch.log(torch.sum(self.pred * self.target, dim=1)))
+        #add epsilon so log(0) !-> -inf
+        return torch.sum(-torch.log(self.pred * self.target + epsilon))
 
     def backward(self):
         epsilon = 1e-6
         #-(1/self.target.size(0)) * (self.target / (self.pred + epsilon))
+        #TODO only works with softmax ouput layer
         return self.target
 
     def get_param(self):

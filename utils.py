@@ -1,8 +1,17 @@
 import torch
 import math
 import matplotlib.pyplot as plt
+import pathlib
+import pickle
+import os
 
 torch.set_grad_enabled(False)
+
+
+REPO_ROOT = pathlib.Path(__file__).absolute().parents[0].absolute().resolve()
+assert (REPO_ROOT.exists())
+MODELS_DIR = (REPO_ROOT / "models").absolute().resolve()
+assert (MODELS_DIR.exists())
 
 
 def generate_disc_set(nb, x=.5, y=.5, plot=False,
@@ -45,18 +54,6 @@ def generate_disc_set(nb, x=.5, y=.5, plot=False,
 
     return data, labels
 
-# def train_model(model, train_data, train_labels, optimizer, lr, epochs, batch_size):
-#     train_data_count = train_data.size(0)
-#     for e in range(epochs):
-#         for j in range(1, train_data_count, batch_size):
-#             optimizer.gd_reset()
-#             optimizer.gd_step(train_data, train_labels)
-#         optimizer.gd_epoch_reset()
-#
-#         print(f" in epoch {e}: train error count:\
-#         {optimizer.nb_train_errors[e]}")
-#         # gradient_descent.nb_train_errors = 0
-
 
 def check_pred_target(output, target):
     """
@@ -78,3 +75,18 @@ def count_errors(model, data, labels, batch_size):
             if predict[i] != label[i]:
                 error += 1
     return error
+
+
+def save_pickle(item, path, name):
+    """Save a file as .pickle"""
+    filename = os.path.join(path, f'{name}.pickle')
+    with open(filename, "wb") as f:
+        pickle.dump(item, f)
+
+
+def load_pickle(path, name):
+    """Load pickle file"""
+    file_path = os.path.join(path, name + '.pickle')
+    with open(file_path, "rb") as f:
+        item = pickle.load(f)
+    return item
