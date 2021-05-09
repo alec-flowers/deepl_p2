@@ -60,6 +60,7 @@ class Linear(Module):
         self.grad_b.add_(torch.sum(gradwrtoutput, dim=0))
 
         # return ∂L/∂xⱼᴸ⁻¹ = wᵢⱼ . ∂L/∂sⱼᴸ
+        a = torch.mm(gradwrtoutput, self.w)
         return torch.mm(gradwrtoutput, self.w)
 
     def get_param(self):
@@ -91,6 +92,7 @@ class Relu(Module):
 
     def backward(self, gradwrtoutput):
         # return ∂l/∂sᵢᴸ = ∂l/∂xᵢᴸ * σ'(sᵢᴸ)
+        a = self.s.sign().clamp(min=0) * gradwrtoutput
         return self.s.sign().clamp(min=0) * gradwrtoutput
 
     def get_param(self):
@@ -121,6 +123,7 @@ class Sigmoid(Module):
 
     def get_param(self):
         return [(None, None)]
+
 
 class Tanh(Module):
     """
@@ -196,9 +199,11 @@ class MSEloss(Module):
     def forward(self, pred, target):
         self.pred = pred
         self.target = target.float().view_as(pred)
+        a = torch.sum((self.pred - self.target)**2) / self.pred.size(0)
         return torch.sum((self.pred - self.target)**2) / self.pred.size(0)
 
     def backward(self):
+        a = 2*(self.pred - self.target) / self.pred.size(0)
         return 2*(self.pred - self.target) / self.pred.size(0)
 
     def get_param(self):
