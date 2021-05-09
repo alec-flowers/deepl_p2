@@ -1,13 +1,11 @@
 import math
 import torch
 
-#debugging stuff
-old_repr = torch.Tensor.__repr__
-def tensor_info(tensor):
-    return repr(tensor.shape)[6:] + ' ' + repr(tensor.dtype)[6:] + '@' + str(tensor.device) + '\n' + old_repr(tensor)
-torch.Tensor.__repr__ = tensor_info
 
 class Module(object):
+    """
+    Module base class
+    """
     def __init__(self):
         pass
 
@@ -24,11 +22,14 @@ class Module(object):
 class Linear(Module):
     """
     Fully connected linear layer
-    Constructor parameters: dimensions of input and output
 
-    Returns:
-    forward  :  FloatTensor of size m (m: input_dim)
-    backward :  FloatTensor of size n (n: output_dim)
+    :param input_dim:       input dimension of layer
+    :param output_dim:      output dimension of layer
+    :param mean:            N(mean, std) initialization of weight and bias matrix
+    :param std:             N(mean, std) initialization of weight and bias matrix
+
+    :return forward:        FloatTensor of size m (m: input_dim)
+    :return backward:       FloatTensor of size n (n: output_dim)
     """
 
     def __init__(self, input_dim, output_dim, mean=0, std=1):
@@ -56,7 +57,6 @@ class Linear(Module):
         self.grad_w.add_(torch.mm(gradwrtoutput.T, self.x))
 
         # ∂l/∂bᵢᴸ⁻¹ = ∑ ∂l/∂sᵢᴸ
-        #TODO unsure about this
         self.grad_b.add_(torch.sum(gradwrtoutput, dim=0))
 
         # return ∂L/∂xⱼᴸ⁻¹ = wᵢⱼ . ∂L/∂sⱼᴸ
@@ -66,19 +66,13 @@ class Linear(Module):
     def get_param(self):
         return [(self.w, self.grad_w), (self.b, self.grad_b)]
 
-# lin = Linear(5,5)
-# input = torch.Tensor([[1],[2],[3],[4],[5]])
-# print(input.size())
-# a = lin.forward(input)
-
 
 class Relu(Module):
     """
     ReLU activation module
 
-    Returns:
-    forward  :  FloatTensor of size m (m: number of units)
-    backward :  FloatTensor of size m (m: number of units)
+    :return forward:        FloatTensor of size m (m: number of units)
+    :return backward:       FloatTensor of size m (m: number of units)
     """
 
     def __init__(self):
@@ -102,9 +96,10 @@ class LeakyRelu(Module):
     """
     LeakyReLU activation module
 
-    Returns:
-    forward  :  FloatTensor of size m (m: number of units)
-    backward :  FloatTensor of size m (m: number of units)
+    :param leaky_factor:    slope to the left of 0
+
+    :return forward:        FloatTensor of size m (m: number of units)
+    :return backward:       FloatTensor of size m (m: number of units)
     """
 
     def __init__(self, leaky_factor=0.01):
@@ -127,9 +122,8 @@ class Sigmoid(Module):
     """
     Sigmoid activation module
 
-    Returns:
-    forward  :  FloatTensor of size m (m: number of units)
-    backward :  FloatTensor of size m (m: number of units)
+    :return forward:        FloatTensor of size m (m: number of units)
+    :return backward:       FloatTensor of size m (m: number of units)
     """
     def __init__(self):
         super().__init__()
@@ -153,9 +147,8 @@ class Tanh(Module):
     """
     Tanh activation module
 
-    Returns:
-    forward  :  FloatTensor of size m (m: number of units)
-    backward :  FloatTensor of size m (m: number of units)
+    :return forward:        FloatTensor of size m (m: number of units)
+    :return backward:       FloatTensor of size m (m: number of units)
     """
 
     def __init__(self):
@@ -181,7 +174,10 @@ class Tanh(Module):
 
 class Softmax(Module):
     """
+    Softmax activation module
 
+    :return forward:        FloatTensor of size m (m: number of units)
+    :return backward:       FloatTensor of size m (m: number of units)
     """
 
     def __init__(self):
@@ -210,9 +206,8 @@ class MSEloss(Module):
     """
     Mean Squared loss module
 
-    Returns:
-    forward  :  MSELoss: l = (x - _x_)²/n (Tensor of size of 1)
-    backward :  ∂l/∂xₙᴸ = 2. (x - _x_)/n (Tensor of size of n)
+    :return forward:        MSELoss: l = (x - _x_)²/n (Tensor of size of 1)
+    :return backward:       ∂l/∂xₙᴸ = 2. (x - _x_)/n (Tensor of size of n)
     """
 
     def __init__(self):
@@ -238,6 +233,8 @@ class NLLLoss(Module):
     """
     Negative Log Liklihood Loss
 
+    :return forward:        MSELoss: l = (x - _x_)²/n (Tensor of size of 1)
+    :return backward:       ∂l/∂xₙᴸ = 2. (x - _x_)/n (Tensor of size of n)
     """
 
     def __init__(self):
@@ -266,14 +263,13 @@ class Sequential(Module):
     """
     A module for combining the several modules in a sequential structure
 
-    Returns:
-    forward  :  Apply the sequence of forward of the underlying modules
-    In the forward process in addition to constructing and returning
-    the values of the last layer the node activation values are also stored
+    :return forward:        Apply the sequence of forward of the underlying modules
+                            In the forward process in addition to constructing and returning
+                            the values of the last layer the node activation values are also stored
 
-    backward :  apply the back-propagation of the layers going through the
-    network in a reverse order and fills the gradient member of the underlying
-    module objects
+    :return backward:       apply the back-propagation of the layers going through the
+                            network in a reverse order and fills the gradient member of the underlying
+                            module objects
     """
 
     def __init__(self):

@@ -20,6 +20,7 @@ def train_network(module_list, criterion, batch_size=5,
     :param num_test:        size of test data
     :param normalize:       normalize train and test data
     :param one_hot:         one-hot encode train and test data
+
     :return neuralnet:      return trained neural net
     """
     print(f"== Training Network: {network_name} ==")
@@ -53,6 +54,17 @@ def train_network(module_list, criterion, batch_size=5,
 
 
 def test_network(neuralnet=None, model_name=None, num_test=1000, normalize=True, one_hot=True):
+    """
+    Test a trained neural network on new data. Can either pass in network or load from a file.
+
+    :param neuralnet:       Sequential object to test
+    :param model_name:      filename to load from models directory
+    :param num_test:        number test data points
+    :param normalize:       normalize test data points
+    :param one_hot:         one hot encode labels of test data
+
+    :return: None
+    """
     test_data, test_labels = generate_disc_set(num_test, normalize=normalize,
                                                      one_hot=one_hot)
     if neuralnet is not None:

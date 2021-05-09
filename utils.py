@@ -57,7 +57,11 @@ def generate_disc_set(nb, x=.5, y=.5, plot=False,
 
 def check_pred_target(output, target):
     """
-    @brief      checks the on-hot predictions and targets
+    Checks the one-hot predictions and targets
+
+    :param output:      predictions
+    :param target:      labels
+    :return:            total number of prediction errors
     """
     errors = []
     for i in range(output.size(0)):
@@ -66,6 +70,15 @@ def check_pred_target(output, target):
 
 
 def count_errors(model, data, labels, batch_size):
+    """
+    Batches and checks the test error.
+
+    :param model:       neural network
+    :param data:        test data
+    :param labels:      test labels
+    :param batch_size:  size of batch
+    :return:            total number of prediciton errors
+    """
     error = 0
     for d, label in zip(data.split(batch_size), labels.split(batch_size)):
         output = model.forward(d)
@@ -78,14 +91,27 @@ def count_errors(model, data, labels, batch_size):
 
 
 def save_pickle(item, path, name):
-    """Save a file as .pickle"""
+    """
+    Save a file as .pickle
+
+    :param item:    item to save
+    :param path:    location to save
+    :param name:    name of file
+    :return:        None
+    """
     filename = os.path.join(path, f'{name}.pickle')
     with open(filename, "wb") as f:
         pickle.dump(item, f)
 
 
 def load_pickle(path, name):
-    """Load pickle file"""
+    """
+    Load pickle file
+
+    :param path:    where file is located
+    :param name:    name of file
+    :return:        saved item
+    """
     file_path = os.path.join(path, name + '.pickle')
     with open(file_path, "rb") as f:
         item = pickle.load(f)
