@@ -92,8 +92,32 @@ class Relu(Module):
 
     def backward(self, gradwrtoutput):
         # return ∂l/∂sᵢᴸ = ∂l/∂xᵢᴸ * σ'(sᵢᴸ)
-        a = self.s.sign().clamp(min=0) * gradwrtoutput
         return self.s.sign().clamp(min=0) * gradwrtoutput
+
+    def get_param(self):
+        return [(None, None)]
+
+
+class LeakyRelu(Module):
+    """
+    LeakyReLU activation module
+
+    Returns:
+    forward  :  FloatTensor of size m (m: number of units)
+    backward :  FloatTensor of size m (m: number of units)
+    """
+
+    def __init__(self, leaky_factor=0.01):
+        super().__init__()
+        self.s = None
+        self.leaky_factor = leaky_factor
+
+    def forward(self, inp):
+        self.s = inp
+        return torch.where(self.s > 0.0, self.s, self.s * self.leaky_factor)
+
+    def backward(self, gradwrtoutput):
+        return torch.where(self.s > 0.0, 1.0, self.leaky_factor) * gradwrtoutput
 
     def get_param(self):
         return [(None, None)]

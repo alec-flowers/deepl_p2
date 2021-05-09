@@ -71,21 +71,21 @@ if __name__ == "__main__":
     n_output = 2
 
     criterion = NLLLoss()
-    mod_list = [Linear(n_input, 10, 0.0, 1.0), Relu(),
-                    Linear(10, 50, 0.0, 1.0), Relu(),
-                    Linear(50, 50, 0.0, 1.0), Relu(),
-                    Linear(50, 10, 0.0, 1.0), Relu(),
+    mod_list = [Linear(n_input, 10, 0.0, 1.0), LeakyRelu(),
+                    Linear(10, 50, 0.0, 1.0), LeakyRelu(),
+                    Linear(50, 50, 0.0, 1.0), LeakyRelu(),
+                    Linear(50, 10, 0.0, 1.0), LeakyRelu(),
                     Linear(10, n_output, 0.0, 1.0), Softmax()]
 
     criterion2 = MSEloss()
-    mod_list2 = [Linear(n_input, 10, 0.0, 1.0), Tanh(),
-                    Linear(10, 50, 0.0, 1.0), Tanh(),
-                    Linear(50, 50, 0.0, 1.0), Tanh(),
-                    Linear(50, 10, 0.0, 1.0), Tanh(),
+    mod_list2 = [Linear(n_input, 10, 0.0, 1.0), Relu(),
+                    Linear(10, 50, 0.0, 1.0), Relu(),
+                    Linear(50, 50, 0.0, 1.0), Relu(),
+                    Linear(50, 10, 0.0, 1.0), Relu(),
                     Linear(10, n_output, 0.0, 1.0), Sigmoid()]
 
-    # net = train_network(mod_list, criterion, lr=1e-6, network_name='cross_entropy')
-    # test_network(model_name='cross_entropy')
+    net = train_network(mod_list, criterion, lr=1e-5, network_name='cross_entropy')
+    test_network(model_name='cross_entropy')
 
-    net2 = train_network(mod_list2, criterion2, lr=1e-3, network_name='mse', batch_size=5)
-    test_network(model_name='mse')
+    # net2 = train_network(mod_list2, criterion2, lr=1e-3, network_name='mse', batch_size=5)
+    # test_network(model_name='mse')
