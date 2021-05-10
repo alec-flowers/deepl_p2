@@ -1,4 +1,5 @@
-from utils import MODELS_DIR, count_errors, save_pickle, load_pickle, generate_disc_set, check_pred_target
+from utils import MODELS_DIR, count_errors, save_pickle,\
+    load_pickle, generate_disc_set, check_pred_target
 from module import *
 from solvers import *
 import matplotlib.pyplot as plt
@@ -7,7 +8,8 @@ import numpy as np
 
 def train_network(module_list, criterion, batch_size=5,
                   lr=1e-5, epochs=100, num_train=1000,
-                  num_test=1000, normalize=True, one_hot=True, network_name=None):
+                  num_test=1000, normalize=True,
+                  one_hot=True, network_name=None):
     """
     Builds and trains a neural network on generated data.
 
@@ -25,16 +27,17 @@ def train_network(module_list, criterion, batch_size=5,
     """
     print(f"== Training Network: {network_name} ==")
     train_data, train_labels = generate_disc_set(num_train,
-                                                       normalize=normalize, one_hot=one_hot)
+                                                 normalize=normalize,
+                                                 one_hot=one_hot)
 
     neuralnet = Sequential(module_list)
     gradient_descent = BatchStochaticGradientDescent(neuralnet, criterion,
-                                                     lr,
-                                                     batch_size)
+                                                     lr, batch_size)
     for epoch in range(epochs):
         losses = []
         nb_train_errors = []
-        for input, target in zip(train_data.split(batch_size), train_labels.split(batch_size)):
+        for input, target in zip(train_data.split(batch_size),
+                                 train_labels.split(batch_size)):
             output = neuralnet.forward(input)
             loss = criterion.forward(output, target)
             gradient_descent.gd_reset()
@@ -44,8 +47,9 @@ def train_network(module_list, criterion, batch_size=5,
             losses.append(loss)
             nb_train_errors.append(check_pred_target(output, target).item())
         if epoch % 10 == 0:
-            print(f" Epoch {epoch} || Train Loss: {(sum(losses)/train_labels.size(0)).item():.03f}\
-             || Train Accuracy: {1 - sum(nb_train_errors)/train_labels.size(0):.03f} %")
+            print(f" Epoch {epoch} || Train Loss:\
+                  {(sum(losses)/train_labels.size(0)).item():.03f}\ || Train\
+                  Accuracy: {1 - sum(nb_train_errors)/train_labels.size(0):.03f} %")
     print(f"== End Training: {network_name} ==")
     if network_name is not None:
         save_pickle(neuralnet, MODELS_DIR, network_name)
@@ -53,9 +57,11 @@ def train_network(module_list, criterion, batch_size=5,
     return neuralnet
 
 
-def test_network(neuralnet=None, model_name=None, num_test=1000, normalize=True, one_hot=True):
+def test_network(neuralnet=None, model_name=None,
+                 num_test=1000, normalize=True, one_hot=True):
     """
-    Test a trained neural network on new data. Can either pass in network or load from a file.
+    Test a trained neural network on new data.
+    Can either pass in network or load from a file.
 
     :param neuralnet:       Sequential object to test
     :param model_name:      filename to load from models directory
@@ -66,7 +72,7 @@ def test_network(neuralnet=None, model_name=None, num_test=1000, normalize=True,
     :return: None
     """
     test_data, test_labels = generate_disc_set(num_test, normalize=normalize,
-                                                     one_hot=one_hot)
+                                               one_hot=one_hot)
     if neuralnet is not None:
         test_net = neuralnet
     elif model_name is not None:
@@ -84,20 +90,24 @@ if __name__ == "__main__":
 
     criterion = NLLLoss()
     mod_list = [Linear(n_input, 10, 0.0, 1.0), LeakyRelu(),
-                    Linear(10, 50, 0.0, 1.0), LeakyRelu(),
-                    Linear(50, 50, 0.0, 1.0), LeakyRelu(),
-                    Linear(50, 10, 0.0, 1.0), LeakyRelu(),
-                    Linear(10, n_output, 0.0, 1.0), Softmax()]
+                Linear(10, 50, 0.0, 1.0), LeakyRelu(),
+                Linear(50, 50, 0.0, 1.0), LeakyRelu(),
+                Linear(50, 10, 0.0, 1.0), LeakyRelu(),
+                Linear(10, n_output, 0.0, 1.0), Softmax()]
+
+    mod_1 = Sequential(mod_list)
 
     criterion2 = MSEloss()
     mod_list2 = [Linear(n_input, 10, 0.0, 1.0), Tanh(),
-                    Linear(10, 50, 0.0, 1.0), Tanh(),
-                    Linear(50, 50, 0.0, 1.0), Tanh(),
-                    Linear(50, 10, 0.0, 1.0), Relu(),
-                    Linear(10, n_output, 0.0, 1.0), Sigmoid()]
+                 Linear(10, 50, 0.0, 1.0), Tanh(),
+                 Linear(50, 50, 0.0, 1.0), Tanh(),
+                 Linear(50, 10, 0.0, 1.0), Relu(),
+                 Linear(10, n_output, 0.0, 1.0), Sigmoid()]
 
-    net = train_network(mod_list, criterion, lr=1e-5, network_name='cross_entropy', batch_size=5)
+    net = train_network(mod_list, criterion, lr=1e-5,
+                        network_name='cross_entropy', batch_size=5)
     test_network(model_name='cross_entropy')
 
-    net2 = train_network(mod_list2, criterion2, lr=1e-3, network_name='mse', batch_size=5)
+    net2 = train_network(mod_list2, criterion2, lr=1e-3,
+                         network_name='mse', batch_size=5)
     test_network(model_name='mse')

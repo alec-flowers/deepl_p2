@@ -36,7 +36,8 @@ class Linear(Module):
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.w = torch.empty((self.output_dim, self.input_dim)).normal_(mean, std)
+        self.w = torch.empty((self.output_dim,
+                              self.input_dim)).normal_(mean, std)
         self.b = torch.empty(self.output_dim).normal_(mean, std)
         self.grad_w = torch.empty(self.w.size())
         self.grad_b = torch.empty(self.b.size())
@@ -233,7 +234,7 @@ class NLLLoss(Module):
     """
     Negative Log Liklihood Loss
 
-    :return forward:        MSELoss: l = (x - _x_)²/n (Tensor of size of 1)
+    :return forward:        NLLLoss: l = log(x * (_x_ + ε))²/n (Tensor of size of 1)
     :return backward:       ∂l/∂xₙᴸ = 2. (x - _x_)/n (Tensor of size of n)
     """
 
@@ -263,13 +264,14 @@ class Sequential(Module):
     """
     A module for combining the several modules in a sequential structure
 
-    :return forward:        Apply the sequence of forward of the underlying modules
-                            In the forward process in addition to constructing and returning
-                            the values of the last layer the node activation values are also stored
+    :return forward:        Apply the sequence of forward of the underlying
+                            modules In the forward process in addition to
+                            constructing and returning the values of the last
+                            layer the node activation values are also stored
 
-    :return backward:       apply the back-propagation of the layers going through the
-                            network in a reverse order and fills the gradient member of the underlying
-                            module objects
+    :return backward:       apply the back-propagation of the layers going
+                            through the network in a reverse order and fills the
+                            gradient member of the underlying module objects
     """
 
     def __init__(self):

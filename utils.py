@@ -34,7 +34,8 @@ def generate_disc_set(nb, x=.5, y=.5, plot=False,
     x_scale = data[:, 0] - x
     y_scale = data[:, 1] - y
 
-    labels = torch.where(x_scale.square().add(y_scale.square()).sqrt() > radius, 1, 0)
+    labels = torch.where(x_scale.square().add(y_scale.square()).sqrt() > radius,
+                         1, 0)
     if one_hot:
         one_hot = torch.zeros(nb, 2)
         one_hot[(range(one_hot.shape[0])), labels] = 1
