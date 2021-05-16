@@ -172,36 +172,6 @@ class Tanh(Module):
         return [(None, None)]
 
 
-class Softmax(Module):
-    """
-    Softmax activation module
-
-    :return forward:        FloatTensor of size m (m: number of units)
-    :return backward:       FloatTensor of size m (m: number of units)
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.s = None
-
-    def forward(self, inp):
-        # Numerical stability, subtract max before applying softmax
-        shift = inp - torch.max(inp, 1)[0].view(-1, 1)
-        self.s = torch.exp(shift)
-        return self.s / torch.sum(self.s, 1, keepdim=True)
-
-    def backward(self, gradwrtoutput):
-        # p = (self.s/torch.sum(self.s)).view(1, -1)
-        # gradwrtoutput = gradwrtoutput.view(1, -1)
-        # jacobian = p * torch.eye(p.size(0)) - torch.mm(p.T, p)
-        # grad = gradwrtoutput @ jacobian
-        #TODO only works with NLLLoss
-        return self.s - gradwrtoutput
-
-    def get_param(self):
-        return [(None, None)]
-
-
 class MSEloss(Module):
     """
     Mean Squared loss module
@@ -229,7 +199,7 @@ class MSEloss(Module):
         return [(None, None)]
 
 
-class NLLLoss(Module):
+class CrossEntropyLoss(Module):
     """
     Negative Log Liklihood Loss
 
@@ -241,19 +211,19 @@ class NLLLoss(Module):
         super().__init__()
         self.pred = None
         self.target = None
+        self.epsilon = 1e-5
 
-    def forward(self, pred, target):
-        epsilon = 1e-5
-        self.pred = pred
-        self.target = target.float().view_as(pred)
+    def forward(self, inp, target):
+        shift = inp - torch.max(inp, 1)[0].view(-1, 1)
+        num = torch.exp(shift)
+        self.pred = num / torch.sum(num, 1, keepdim=True)
+
+        self.target = target.float().view_as(self.pred)
         #add epsilon so log(0) !-> -inf
-        return torch.sum(-torch.log(self.pred * self.target + epsilon))
+        return torch.sum(-torch.log(self.pred * self.target + self.epsilon))
 
     def backward(self):
-        epsilon = 1e-6
-        #-(1/self.target.size(0)) * (self.target / (self.pred + epsilon))
-        #TODO only works with softmax ouput layer
-        return self.target
+        return self.pred - self.target
 
     def get_param(self):
         return [(None, None)]
