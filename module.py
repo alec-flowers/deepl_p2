@@ -1,4 +1,3 @@
-import math
 import torch
 
 
@@ -201,7 +200,7 @@ class MSEloss(Module):
 
 class CrossEntropyLoss(Module):
     """
-    Negative Log Liklihood Loss
+    Cross Entropy Loss Loss
 
     :return forward:        MSELoss: l = (x - _x_)²/n (Tensor of size of 1)
     :return backward:       ∂l/∂xₙᴸ = 2. (x - _x_)/n (Tensor of size of n)
