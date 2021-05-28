@@ -1,5 +1,4 @@
-# deepl_p2
-Project 2 - Mini Deep Learning Framework
+# Project 2 - Mini Deep Learning Framework
 
 Run test.py will run two models for 200 epochs, print the training loss along the way, and output the final train and test accuracy: 
 
