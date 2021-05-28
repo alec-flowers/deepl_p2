@@ -3,11 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import pathlib
 import os
-try:
-    import pickle
-    pickle_found = True
-except:
-    pickle_found = False
+import pickle
 
 torch.set_grad_enabled(False)
 
@@ -103,12 +99,9 @@ def save_pickle(item, path, name):
     :param name:        name of file
     :return:            None
     """
-    if pickle_found:
-        filename = os.path.join(path, f'{name}.pickle')
-        with open(filename, "wb") as f:
-            pickle.dump(item, f)
-    else:
-        pass
+    filename = os.path.join(path, f'{name}.pickle')
+    with open(filename, "wb") as f:
+        pickle.dump(item, f)
 
 
 def load_pickle(path, name):
@@ -119,10 +112,7 @@ def load_pickle(path, name):
     :param name:        name of file
     :return:            saved item
     """
-    if pickle_found:
-        file_path = os.path.join(path, name + '.pickle')
-        with open(file_path, "rb") as f:
-            item = pickle.load(f)
-        return item
-    else:
-        pass
+    file_path = os.path.join(path, name + '.pickle')
+    with open(file_path, "rb") as f:
+        item = pickle.load(f)
+    return item
