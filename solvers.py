@@ -1,10 +1,7 @@
-
 """
 This file contains different solvers that will be used for optimizing our
 home baked NN.
 """
-import torch
-from module import *
 
 
 def gradient_descent_worker(weight, grad, learning_rate, batch_size):
@@ -68,7 +65,7 @@ class BatchStochaticGradientDescent(Solver):
               self).__init__(module, criterion, learning_rate)
         self.batch_size = batch_size
 
-    def step(self, batch_size=1):
+    def step(self):
         """
         Applies the gradient step on the parameters of the module
         wᵢ = wᵢ₋₁ - α ∂l/∂w|ᵢ₋₁
@@ -76,7 +73,7 @@ class BatchStochaticGradientDescent(Solver):
         params = self.module.get_param()
         for param in params:
             weight, grad = param
-            gradient_descent_worker(weight, grad, self.lr, batch_size)
+            gradient_descent_worker(weight, grad, self.lr, self.batch_size)
 
     def gd_reset(self):
         self.zero_grad()

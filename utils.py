@@ -2,8 +2,12 @@ import torch
 import math
 import matplotlib.pyplot as plt
 import pathlib
-import pickle
 import os
+try:
+    import pickle
+    pickle_found = True
+except:
+    pickle_found = False
 
 torch.set_grad_enabled(False)
 
@@ -20,13 +24,13 @@ def generate_disc_set(nb, x=.5, y=.5, plot=False,
     Create data points randomly on [0,1].
     Classify those inside circle as 1 and outside as 0.
 
-    :param nb: number of datapoints to create
-    :param x: x-coordinate of circle
-    :param y: y-coordinate of circle
-    :param plot: boolean to output graph of data
-    :param normalize: boolean to normalized input data
-    :param one_hot: boolean to one hot encode output
-    :return: data, labels
+    :param nb:          number of datapoints to create
+    :param x:           x-coordinate of circle
+    :param y:           y-coordinate of circle
+    :param plot:        boolean to output graph of data
+    :param normalize:   boolean to normalized input data
+    :param one_hot:     boolean to one hot encode output
+    :return:            data, labels
     '''
     radius = 1 / math.sqrt(2 * math.pi)
 
@@ -94,25 +98,31 @@ def save_pickle(item, path, name):
     """
     Save a file as .pickle
 
-    :param item:    item to save
-    :param path:    location to save
-    :param name:    name of file
-    :return:        None
+    :param item:        item to save
+    :param path:        location to save
+    :param name:        name of file
+    :return:            None
     """
-    filename = os.path.join(path, f'{name}.pickle')
-    with open(filename, "wb") as f:
-        pickle.dump(item, f)
+    if pickle_found:
+        filename = os.path.join(path, f'{name}.pickle')
+        with open(filename, "wb") as f:
+            pickle.dump(item, f)
+    else:
+        pass
 
 
 def load_pickle(path, name):
     """
     Load pickle file
 
-    :param path:    where file is located
-    :param name:    name of file
-    :return:        saved item
+    :param path:        where file is located
+    :param name:        name of file
+    :return:            saved item
     """
-    file_path = os.path.join(path, name + '.pickle')
-    with open(file_path, "rb") as f:
-        item = pickle.load(f)
-    return item
+    if pickle_found:
+        file_path = os.path.join(path, name + '.pickle')
+        with open(file_path, "rb") as f:
+            item = pickle.load(f)
+        return item
+    else:
+        pass

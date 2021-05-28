@@ -1,5 +1,6 @@
 from utils import MODELS_DIR, count_errors, save_pickle, load_pickle, generate_disc_set, check_pred_target
 from solvers import *
+from module import Sequential
 
 
 def train_network(module_list, criterion, train_data, train_labels, batch_size=5,
@@ -9,13 +10,11 @@ def train_network(module_list, criterion, train_data, train_labels, batch_size=5
 
     :param module_list:     list of ordered modules to feed network
     :param criterion:       which optimizer to use
+    :param train_data       training data
+    :param train_labels     training data labels
     :param batch_size:      size of batches
     :param lr:              learning rate
     :param epochs:          number epochs
-    :param num_train:       size of training data
-    :param num_test:        size of test data
-    :param normalize:       normalize train and test data
-    :param one_hot:         one-hot encode train and test data
     :param network_name:    name to save network under
 
     :return neuralnet:      return trained neural net
@@ -30,14 +29,21 @@ def train_network(module_list, criterion, train_data, train_labels, batch_size=5
         losses = []
         nb_train_errors = []
         for input, target in zip(train_data.split(batch_size), train_labels.split(batch_size)):
+            # forward pass
             output = neuralnet.forward(input)
+
+            # calculate loss and gradients
             loss = criterion.forward(output, target)
             gradient_descent.gd_reset()
             neuralnet.backward(criterion.backward())
+
+            # update parameters
             gradient_descent.step()
 
+            # save data
             losses.append(loss)
             nb_train_errors.append(check_pred_target(output, target).item())
+
         if epoch % 10 == 0:
             print(f" Epoch {epoch} || Train Loss: {(sum(losses)/train_labels.size(0)).item():.03f}\
              || Train Accuracy: {1 - sum(nb_train_errors)/train_labels.size(0):.03f} %")
@@ -71,4 +77,4 @@ def test_network(neuralnet=None, model_name=None, num_test=1000, normalize=True,
         raise AssertionError
 
     test_error = count_errors(test_net, test_data, test_labels, batch_size=10)
-    print(f"Test Accuracy: {1 - test_error/test_labels.size(0):.03f} %")
+    print(f"Test Accuracy: {1 - test_error/test_labels.size(0):.03f} % \n")

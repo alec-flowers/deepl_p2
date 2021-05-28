@@ -1,6 +1,6 @@
 from train import train_network, test_network
-from solvers import *
 from utils import generate_disc_set
+from module import *
 
 
 def main():
@@ -30,17 +30,17 @@ def main():
 
     # Example using CrossEntropyLoss
 
-    # mod_list2 = [Linear(n_input, 10, 0.0, 1.0), LeakyRelu(),
-    #              Linear(10, 50, 0.0, 1.0), LeakyRelu(),
-    #              Linear(50, 100, 0.0, 1.0), LeakyRelu(),
-    #              Linear(100, 100, 0.0, 1.0), LeakyRelu(),
-    #              Linear(100, 50, 0.0, 1.0), LeakyRelu(),
-    #              Linear(50, 10, 0.0, 1.0), LeakyRelu(),
-    #              Linear(10, n_output, 0.0, 1.0)]
-    # criterion2 = CrossEntropyLoss()
-    #
-    # net2 = train_network(mod_list2, criterion2, train_data, train_labels, lr=1e-4, network_name='cross_entropy', batch_size=5, epochs=200)
-    # test_network(net2)
+    mod_list2 = [Linear(n_input, 10, 0.0, 1.0), LeakyRelu(),
+                 Linear(10, 50, 0.0, 1.0), LeakyRelu(),
+                 Linear(50, 100, 0.0, 1.0), LeakyRelu(),
+                 Linear(100, 100, 0.0, 1.0), LeakyRelu(),
+                 Linear(100, 50, 0.0, 1.0), LeakyRelu(),
+                 Linear(50, 10, 0.0, 1.0), LeakyRelu(),
+                 Linear(10, n_output, 0.0, 1.0)]
+    criterion2 = CrossEntropyLoss()
+
+    net2 = train_network(mod_list2, criterion2, train_data, train_labels, lr=1e-4, network_name='cross_entropy', batch_size=5, epochs=200)
+    test_network(net2)
 
 
 if __name__ == "__main__":

@@ -45,8 +45,6 @@ class Linear(Module):
         # xᴸ⁻¹
         self.x = inp
         # sᴸ = wᴸ xᴸ⁻¹ + bᴸ
-        # if len(list(self.x.size())) == 1:
-        #     self.x = self.x.view(-1, 1)
         return torch.addmm(self.b, self.x, self.w.T)
 
     def backward(self, gradwrtoutput):
@@ -129,10 +127,7 @@ class Sigmoid(Module):
         self.sigmoid = None
 
     def forward(self, inp):
-        # if inp.item >= 0:
         self.sigmoid = 1. / (1. + torch.exp(-inp))
-        # else:
-        #     self.sigmoid = torch.exp(inp) / (1. + torch.exp(inp))
         return self.sigmoid
 
     def backward(self, gradwrtoutput):
@@ -158,12 +153,10 @@ class Tanh(Module):
         self.s = s
         # xᴸ = σ(sᴸ)
         exp = torch.exp(2*self.s)
-        # tanh(x) = ((-1. - e⁻²ˣ)/(1. + e⁻²ˣ)).
         return (1. - (2. / (1. + exp)))
 
     def backward(self, gradwrtoutput):
         # return ∂l/∂sᵢᴸ = ∂l/∂xᵢᴸ * σ'(sᵢᴸ)
-        # return 2/(torch.exp(self.s)+torch.exp(-self.s)) * gradwrtoutput
         return (4 * ((self.s.exp() + self.s.mul(-1).exp()).pow(-2)) *
                 gradwrtoutput)
 
@@ -200,10 +193,10 @@ class MSEloss(Module):
 
 class CrossEntropyLoss(Module):
     """
-    Cross Entropy Loss Loss
+    Cross Entropy Loss
 
-    :return forward:        MSELoss: l = (x - _x_)²/n (Tensor of size of 1)
-    :return backward:       ∂l/∂xₙᴸ = 2. (x - _x_)/n (Tensor of size of n)
+    :return forward:        Cross Entropy Loss
+    :return backward:       pred - target
     """
 
     def __init__(self):
@@ -218,7 +211,6 @@ class CrossEntropyLoss(Module):
         self.pred = num / torch.sum(num, 1, keepdim=True)
 
         self.target = target.float().view_as(self.pred)
-        #add epsilon so log(0) !-> -inf
         return torch.sum(-torch.log(self.pred * self.target + self.epsilon))
 
     def backward(self):
