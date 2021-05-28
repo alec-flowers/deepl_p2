@@ -1,12 +1,12 @@
 # deepl_p2
 Project 2 - Mini Deep Learning Framework
 
-Run test.py will run two models - 
+Run test.py will run two models for 200 epochs, print the training loss along the way, and output the final train and test accuracy: 
 
 1) Vanilla model that was outlined in the project
 1) Model we built ourselves with cross entropy loss
 
-
+### File Explanation
 **module.py** - contains every class inheriting from the module class. These modules are the core of our framework and include linear layers, non-linear activation functions, loss functions, and a sequential class for stacking the layers. 
 
 **solvers.py** - contains one solver that can perform gradient descent, mini-batch gradient descent and stochastic gradient descent depending on the input parameters. 
