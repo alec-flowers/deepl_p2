@@ -1,6 +1,8 @@
 # Project 2 - Mini Deep Learning Framework
+The goal of this project was to implement a mini-deep learning framework using only pytorch's tensor operations and the standard math library.
 
-Run test.py will run two models for 200 epochs, print the training loss along the way, and output the final train and test accuracy: 
+
+Run test.py will run two models for 200 epochs, print the training loss along the way, and output the final train and test accuracy using the mini deep learning framework that we built. The two models are: 
 
 1) Vanilla model that was outlined in the project
 1) Model we built ourselves with cross entropy loss
